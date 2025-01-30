@@ -1,0 +1,4 @@
+# .gitignore
+
+# Ignore configuration files with sensitive data
+config.ps1
