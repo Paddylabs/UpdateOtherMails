@@ -1,6 +1,6 @@
 # PagerSync
 
-A customer had a requirement to populate the "othermails" attribute for certain hybrid entra users who were NOT mail enabled with an external email address
+A customer had a requirement to populate the "othermails" attribute for certain hybrid entra users who were NOT licenced & mail enabled; with an external email address
 
 To do this we picked an attribute for the AD User (pager) and added the external email address for each user to that attribute.
 
