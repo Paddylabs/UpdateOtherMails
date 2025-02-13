@@ -108,10 +108,15 @@ Foreach ($User in $users) {
 
     # If the entra user does not have the ad pager attribute value in the othermails attribute, add it
     if ($MgUser.otherMails -notcontains $ADUsersPager) {
-        # $newOtherMails = $MgUser.otherMails + $ADUsersPager
-        Update-MgUser -UserId $User.UserPrincipalName -OtherMails $ADUsersPager
-        Write-Host "$($User.UserPrincipalName) otherMails updated with $ADUsersPager" -ForegroundColor Green
-        WriteLog "$($User.UserPrincipalName) otherMails updated with $ADUsersPager"
+            try {
+                Update-MgUser -UserId $User.UserPrincipalName -OtherMails $ADUsersPager -ErrorAction Stop
+                Write-Host "$($User.UserPrincipalName) otherMails updated with $ADUsersPager" -ForegroundColor Green
+                WriteLog "$($User.UserPrincipalName) otherMails updated with $ADUsersPager"
+            }
+            catch {
+                Write-Host "Cannot update $($User.UserPrincipalName). User may hold a Privileged Role" -ForegroundColor Red
+                WriteLog "Cannot update $($User.UserPrincipalName). User may hold a Privileged Role"
+            }
     }
     # If the entra user does have the ad pager attribute value in the othermails attribute, skip the user, log it and continue
     else {
