@@ -92,6 +92,9 @@ $ClientSecretPass = ConvertTo-SecureString -String $ClientSecret -AsPlainText -F
 $ClientSecretCredential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $ClientId, $ClientSecretPass
 Connect-MgGraph -TenantId $TenantId -ClientSecretCredential $ClientSecretCredential
 
+# Email regex pattern
+$EmailRegex = '^[a-zA-Z0-9][\w\.-]*@[a-zA-Z0-9-]+(\.[a-zA-Z]{2,}){1,2}$'
+
 # Get the users from the AD group
 $users = Get-ADGroupMember -Identity $GroupName | Get-ADUser -Properties pager
 
@@ -100,9 +103,9 @@ Foreach ($User in $users) {
     $MgUser = Get-MgUser -UserId $User.UserPrincipalName  -Property "displayName,userPrincipalName,otherMails,createdDateTime" | Select-Object displayName,userPrincipalName,OtherMails
 
     # If the AD user does not have the pager attribute populated, skip the user, log it and continue
-    If ($null -eq $ADUsersPager) {
-        Write-Host "$($User.UserPrincipalName) does not have an email in their AD pager attribute" -ForegroundColor Yellow
-        WriteLog "$($User.UserPrincipalName) does not have an email in their AD pager attribute"
+    If ($ADUsersPager -notmatch $EmailRegex) {
+        Write-Host "$($User.UserPrincipalName) does not have a valid email in their AD pager attribute" -ForegroundColor Red
+        WriteLog "$($User.UserPrincipalName) does not have a valid email in their AD pager attribute"
         Continue
     }
 
