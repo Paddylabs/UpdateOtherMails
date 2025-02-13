@@ -101,8 +101,8 @@ Foreach ($User in $users) {
 
     # If the AD user does not have the pager attribute populated, skip the user, log it and continue
     If ($null -eq $ADUsersPager) {
-        Write-Host "$($User.UserPrincipalName) does not have an email in their pager attribute" -ForegroundColor Yellow
-        WriteLog "$($User.UserPrincipalName) does not have an email in their pager attribute"
+        Write-Host "$($User.UserPrincipalName) does not have an email in their AD pager attribute" -ForegroundColor Yellow
+        WriteLog "$($User.UserPrincipalName) does not have an email in their AD pager attribute"
         Continue
     }
 
@@ -110,11 +110,13 @@ Foreach ($User in $users) {
     if ($MgUser.otherMails -notcontains $ADUsersPager) {
         # $newOtherMails = $MgUser.otherMails + $ADUsersPager
         Update-MgUser -UserId $User.UserPrincipalName -OtherMails $ADUsersPager
+        Write-Host "$($User.UserPrincipalName) otherMails updated with $ADUsersPager" -ForegroundColor Green
+        WriteLog "$($User.UserPrincipalName) otherMails updated with $ADUsersPager"
     }
     # If the entra user does have the ad pager attribute value in the othermails attribute, skip the user, log it and continue
     else {
-    Write-Host "$($User.UserPrincipalName) already has the pager number in otherMails"
-    WriteLog "$($User.UserPrincipalName) already has the pager number in otherMails"
+    Write-Host "$($User.UserPrincipalName) already has the pager email in otherMails"
+    WriteLog "$($User.UserPrincipalName) already has the pager email in otherMails"
 }
 
 }
