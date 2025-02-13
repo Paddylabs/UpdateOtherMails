@@ -93,7 +93,7 @@ $ClientSecretCredential = New-Object -TypeName System.Management.Automation.PSCr
 Connect-MgGraph -TenantId $TenantId -ClientSecretCredential $ClientSecretCredential
 
 # Get the users from the AD group
-$users = Get-ADGroupMember -Identity "Contractors" | Get-ADUser -Properties pager
+$users = Get-ADGroupMember -Identity $GroupName | Get-ADUser -Properties pager
 
 Foreach ($User in $users) {
     $ADUsersPager = $user.pager
