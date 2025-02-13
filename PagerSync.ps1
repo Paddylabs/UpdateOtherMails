@@ -12,7 +12,7 @@ None
 None
 
 .INPUTS
-A config.ps1 file with the following variables: $ClientId, $TenantId, $ClientSecret 
+A config.ps1 file with the following variables: $ClientId, $TenantId, $ClientSecret, $GroupName
 # Update $Clientsecret to $thumbprint when using a certificate for authentication (which you should be doing in production)
 
 .OUTPUTS
