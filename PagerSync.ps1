@@ -1,23 +1,17 @@
 <#
 .SYNOPSIS
 Updates entra users othermails attribute.
-
 .DESCRIPTION
 Updates hybrid entra users othermails attribute with the value from the AD users pager attribute.
-
 .PARAMETER
 None
-
 .EXAMPLE
 None
-
 .INPUTS
 A config.ps1 file with the following variables: $ClientId, $TenantId, $ClientSecret, $GroupName
 # Update $Clientsecret to $thumbprint when using a certificate for authentication (which you should be doing in production)
-
 .OUTPUTS
 A logfile
-
 .NOTES
 Author:        Patrick Horne
 Creation Date: 30/01/25
@@ -88,19 +82,26 @@ Import-ModuleIfNeeded -ModuleName "ActiveDirectory"
 Import-ModuleIfNeeded -ModuleName "Microsoft.Graph.Users"
 
 # Connect to Microsoft Graph
+Try {
 $ClientSecretPass = ConvertTo-SecureString -String $ClientSecret -AsPlainText -Force
 $ClientSecretCredential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $ClientId, $ClientSecretPass
-Connect-MgGraph -TenantId $TenantId -ClientSecretCredential $ClientSecretCredential
+Connect-MgGraph -TenantId $TenantId -ClientSecretCredential $ClientSecretCredential -ErrorAction Stop
+}
+Catch {
+    Write-Host "Error connecting to mgGraph" -ForegroundColor Red
+    WriteLog "Error connecting to mgGraph"
+    Exit
+}
 
 # Email regex pattern
 $EmailRegex = '^[a-zA-Z0-9][\w\.-]*@[a-zA-Z0-9-]+(\.[a-zA-Z]{2,}){1,2}$'
 
-# Get the users from the AD group
-$users = Get-ADGroupMember -Identity $GroupName | Get-ADUser -Properties pager
+# Get the users from the AD group - You can use Get-ADGroupMember if the group contains less than 5k users
+#$users = Get-ADGroupMember -Identity $GroupName | Get-ADUser -Properties pager
+$users = Get-ADGroup -Identity $GroupName -properties Members | Select-Object -ExpandProperty Members  | Get-ADUser -Properties pager
 
 Foreach ($User in $users) {
     $ADUsersPager = $user.pager
-    $MgUser = Get-MgUser -UserId $User.UserPrincipalName  -Property "displayName,userPrincipalName,otherMails,createdDateTime" | Select-Object displayName,userPrincipalName,OtherMails
 
     # If the AD user does not have the pager attribute populated, skip the user, log it and continue
     If ($ADUsersPager -notmatch $EmailRegex) {
@@ -108,6 +109,14 @@ Foreach ($User in $users) {
         WriteLog "$($User.UserPrincipalName) does not have a valid email in their AD pager attribute"
         Continue
     }
+    # If the AD user does not have a UserPrincipalName attribute populated, skip the user, log it and continue
+    If (-not $User.userPrincipalName ) {
+        Write-Host "$($User.sAMAccountName) does not have a valid UserPrincipalName" -ForegroundColor Red
+        WriteLog "$($User.sAMAccountName) does not have a valid UserPrincipalName"
+        Continue
+    }
+
+    $MgUser = Get-MgUser -UserId $User.UserPrincipalName  -Property "displayName,userPrincipalName,otherMails,createdDateTime" | Select-Object displayName,userPrincipalName,OtherMails
 
     # If the entra user does not have the ad pager attribute value in the othermails attribute, add it
     if ($MgUser.otherMails -notcontains $ADUsersPager) {
