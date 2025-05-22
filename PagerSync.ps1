@@ -96,11 +96,18 @@ Catch {
 # Email regex pattern
 $EmailRegex = '^[a-zA-Z0-9][\w\.-]*@[a-zA-Z0-9-]+(\.[a-zA-Z]{2,}){1,2}$'
 
-# Get the users from the AD group - You can use Get-ADGroupMember if the group contains less than 5k users
-#$users = Get-ADGroupMember -Identity $GroupName | Get-ADUser -Properties pager
-$users = Get-ADGroup -Identity $GroupName -properties Members | Select-Object -ExpandProperty Members  | Get-ADUser -Properties pager
+# Get the users from the AD group - You can use Get-ADGroup line if the group contains more than 5k users
+$users = Get-ADGroupMember -Identity $GroupName | Get-ADUser -Properties pager
+# $users = Get-ADGroup -Identity $GroupName -properties Members | Select-Object -ExpandProperty Members  | Get-ADUser -Properties pager
 
+$Counter = 1
 Foreach ($User in $users) {
+    $PercentComplete = [int](($Counter/$($Users.Count))*100)
+    if ($null -ne $Host.UI.RawUI.WindowPosition) {  
+        Write-Progress -Id 1 -Activity "Attempting to update $($User.sAMAccountName)" -Status "$PercentComplete% Complete"  -PercentComplete $PercentComplete
+    }
+    $Counter++
+    
     $ADUsersPager = $user.pager
 
     # If the AD user does not have the pager attribute populated, skip the user, log it and continue
